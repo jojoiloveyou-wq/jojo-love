@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>رحلتنا لعش الزوجية 3D ❤️ | 55 تحدي للحب والذكاء</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo & Amiri -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,700;1,700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Three.js & Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #070106;
+            font-family: 'Cairo', sans-serif;
+        }
+        .font-romantic {
+            font-family: 'Amiri', serif;
+        }
+        #game-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 1;
+        }
+        /* Glassmorphism Romantic Styling */
+        .glass-panel {
+            background: rgba(24, 6, 19, 0.78);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 105, 180, 0.35);
+            box-shadow: 0 12px 40px rgba(244, 63, 94, 0.25), inset 0 0 20px rgba(255, 182, 193, 0.08);
+        }
+        .neon-text-pink {
+            text-shadow: 0 0 12px rgba(244, 63, 94, 0.85), 0 0 28px rgba(236, 72, 153, 0.65);
+        }
+        .neon-text-gold {
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.85), 0 0 24px rgba(245, 158, 11, 0.65);
+        }
+        .btn-romantic {
+            background: linear-gradient(135deg, #f43f5e 0%, #db2777 50%, #9d174d 100%);
+            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.5);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-romantic:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 28px rgba(244, 63, 94, 0.75);
+        }
+        .btn-romantic:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(251, 113, 133, 0.32);
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: rgba(244, 63, 94, 0.28);
+            border-color: #fb7185;
+            transform: translateX(-5px);
+        }
+        .option-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .touch-btn {
+            background: rgba(244, 63, 94, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(251, 113, 133, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45);
+            transition: transform 0.1s, background 0.1s;
+        }
+        .touch-btn:active, .touch-btn.active {
+            background: rgba(244, 63, 94, 0.7);
+            transform: scale(0.92);
+        }
+        @keyframes pulseHeart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.16); }
+        }
+        .animate-heart {
+            display: inline-block;
+            animation: pulseHeart 1.4s infinite ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-9px); }
+            40%, 80% { transform: translateX(9px); }
+        }
+        .shake-anim {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD Top Bar -->
+    <div id="hud" class="fixed top-0 left-0 w-full z-20 p-2.5 sm:p-4 pointer-events-none hidden">
+        <div class="max-w-6xl mx-auto flex flex-col gap-2">
+            <!-- Top Row: Stats & Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <!-- Lives, Score & Streak -->
+                <div class="glass-panel rounded-2xl px-3.5 py-2 flex items-center gap-3 sm:gap-4 pointer-events-auto">
+                    <!-- Lives -->
+                    <div class="flex items-center gap-1" title="الأرواح المتبقية">
+                        <span id="lives-display" class="text-sm sm:text-base tracking-tighter">❤️❤️❤️❤️❤️</span>
+                    </div>
+                    <div class="h-5 w-[1px] bg-rose-500/30"></div>
+                    <!-- Score -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-amber-400 text-base">⭐</span>
+                        <span id="score-count" class="text-amber-300 font-black text-base sm:text-lg neon-text-gold">0</span>
+                    </div>
+                    <!-- Combo Streak -->
+                    <div id="streak-badge" class="hidden px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black">
+                        🔥 x2
+                    </div>
+                </div>
+
+                <!-- Stage Name & Gate Progress -->
+                <div class="glass-panel rounded-2xl px-4 py-2 flex-1 min-w-[220px] max-w-md">
+                    <div class="flex justify-between items-center text-xs mb-1 font-bold">
+                        <span id="stage-name" class="text-pink-300">المرحلة 1: بداية الحكاية ✨</span>
+                        <span id="gates-count" class="text-amber-300">بوابة 0 / 55</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-black/60 rounded-full overflow-hidden border border-rose-500/30">
+                        <div id="progress-bar" class="h-full bg-gradient-to-l from-amber-400 via-rose-500 to-pink-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Auto-Walk, Audio, Camera -->
+                <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+                    <button id="autowalk-btn" class="glass-panel rounded-xl px-3 py-2 text-xs font-bold text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/20 transition flex items-center gap-1.5" title="تشغيل/إيقاف المشي التلقائي للبوابة التالية">
+                        <span id="autowalk-icon">🚶‍♂️</span>
+                        <span id="autowalk-text">مشي تلقائي: مفعل</span>
+                    </button>
+                    <button id="audio-toggle" class="glass-panel rounded-xl p-2 text-rose-200 hover:text-white hover:border-rose-400 transition" title="الموسيقى والأصوات">
+                        <span id="audio-icon" class="text-base">🔇</span>
+                    </button>
+                    <button id="reset-cam-btn" class="glass-panel rounded-xl px-2.5 py-2 text-xs font-bold text-rose-200 hover:text-white hover:border-rose-400 transition hidden sm:block">
+                        🎥 الكاميرا
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen Modal -->
+    <div id="start-screen" class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+        <div class="glass-panel rounded-3xl max-w-xl w-full p-6 sm:p-8 text-center space-y-5 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-36 h-36 bg-rose-600/25 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-amber-500/25 rounded-full blur-2xl"></div>
+
+            <div class="text-5xl animate-heart">💑🏰💖</div>
+            <h1 class="text-3xl sm:text-4xl font-black text-white font-romantic neon-text-pink">
+                رحلتنا الملحمية إلى عش الزوجية
+            </h1>
+            <p class="text-rose-200 text-sm sm:text-base leading-relaxed">
+                أهلاً بك يا <span class="text-amber-300 font-bold">إسلام</span> مع ملكة قلبك <span class="text-pink-400 font-bold">"جوجو / أم وتين"</span> ❤️<br>
+                عشان توصلوا لبيت أحلامكم وتبنوه على أساس صح، قدامكم <span class="text-amber-300 font-black underline">55 اختبار وموقف حقيقي في الحياة الزوجية</span> عبر 5 مراحل لبناء أسرة سعيدة!
+            </p>
+
+            <div class="grid grid-cols-2 gap-2.5 text-right bg-black/40 rounded-2xl p-3.5 border border-rose-500/25 text-xs sm:text-sm text-rose-100">
+                <div>❤️ <strong>5 أرواح:</strong> الإجابة الغلط بتنقص قلب</div>
+                <div>💡 <strong>3 تلميحات:</strong> بتحذفلك إجابتين غلط</div>
+                <div>🚶‍♂️ <strong>مشي تلقائي أو يدوي:</strong> بالأسهم أو WASD</div>
+                <div>🔥 <strong>نظام الكومبو:</strong> جاوب ورا بعض وضاعف نقاطك</div>
+            </div>
+
+            <button id="start-btn" class="btn-romantic w-full py-4 rounded-2xl text-white font-black text-lg tracking-wide cursor-pointer">
+                ابدأ تحدي الـ 55 بوابة سوا ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- Obstacle Challenge Modal -->
+    <div id="challenge-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md">
+        <div id="challenge-card" class="glass-panel rounded-3xl max-w-lg w-full p-5 sm:p-7 text-center space-y-4 border-2 border-rose-400/50 max-h-[92vh] overflow-y-auto">
+            <!-- Top Header inside Modal -->
+            <div class="flex items-center justify-between text-xs">
+                <span id="challenge-badge" class="px-3 py-1 rounded-full font-bold bg-rose-500/25 text-rose-200 border border-rose-500/40">
+                    بوابة 1 / 55
+                </span>
+                <span id="challenge-category" class="px-3 py-1 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    💖 حكمة الحب
+                </span>
+                <button id="hint-btn" class="px-3 py-1 rounded-full font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/50 hover:bg-indigo-500/50 transition cursor-pointer">
+                    💡 تلميح (<span id="hints-left">3</span>)
+                </button>
+            </div>
+
+            <div id="challenge-icon" class="text-4xl sm:text-5xl pt-1">🚧</div>
+            <h2 id="challenge-title" class="text-xl sm:text-2xl font-black text-white font-romantic neon-text-pink">
+                عنوان العقبة
+            </h2>
+            <p id="challenge-question" class="text-rose-100 text-sm sm:text-base leading-relaxed font-semibold bg-black/30 p-3.5 rounded-2xl border border-white/10">
+                السؤال يظهر هنا...
+            </p>
+
+            <!-- Multiple Choice Options Container -->
+            <div id="challenge-options" class="space-y-2 text-right">
+                <!-- Options injected dynamically -->
+            </div>
+
+            <!-- Secret Text Input Container (For special password gates) -->
+            <div id="secret-input-container" class="hidden space-y-3">
+                <input id="secret-answer-input" type="text" placeholder="اكتب الإجابة السرية هنا..." class="w-full p-3.5 rounded-2xl bg-black/50 border border-rose-400/50 text-white text-center font-bold focus:outline-none focus:border-amber-400" />
+                <button id="secret-submit-btn" class="btn-romantic w-full py-3 rounded-2xl text-white font-bold cursor-pointer">
+                    افتح البوابة السرية 🔐
+                </button>
+            </div>
+
+            <p id="challenge-feedback" class="text-xs sm:text-sm font-bold min-h-[22px] text-amber-300"></p>
+        </div>
+    </div>
+
+    <!-- Out of Lives (Love Promise Recovery) Modal -->
+    <div id="out-of-lives-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-lg">
+        <div class="glass-panel rounded-3xl max-w-md w-full p-6 sm:p-8 text-center space-y-5 border-2 border-rose-500">
+            <div class="text-5xl">💔🩹</div>
+            <h2 class="text-2xl sm:text-3xl font-black text-rose-400 font-romantic">
+                خلصت قلوبكم في الطريق!
+            </h2>
+            <p class="text-rose-100 text-sm sm:text-base leading-relaxed">
+                التحديات كانت صعبة شوية، بس الحب الحقيقي عمره ما بيستسلم! عشان تستعيدوا <span class="text-amber-300 font-bold">3 قلوب جديدة</span> وتكملوا من نفس البوابة، أوعدوا بعض بوعد صادق:
+            </p>
+            <div class="bg-rose-950/50 p-3.5 rounded-2xl border border-rose-500/40 text-pink-200 text-sm font-bold italic">
+                "أوعدك يا أم وتين إن مهما قابلتنا صعوبات في الدنيا هفضل جنبك وسندك لآخر العمر ❤️"
+            </div>
+            <button id="promise-revive-btn" class="btn-romantic w-full py-3.5 rounded-2xl text-white font-black text-base cursor-pointer">
+                أوعدك بقلبي ❤️ (استعادة 3 أرواح)
+            </button>
+        </div>
+    </div>
+
+    <!-- Grand Finale Celebration Modal -->
+    <div id="victory-modal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center space-y-5 border-2 border-amber-400/70">
+            <div class="text-5xl animate-heart">🏰💍💖</div>
+            <h2 class="text-3xl sm:text-4xl font-black text-amber-300 font-romantic neon-text-gold">
+                مبروك يا إسلام ويا أم وتين!
+            </h2>
+            <p class="text-rose-100 text-sm sm:text-base leading-relaxed">
+                تخطيتوا <span class="text-amber-300 font-black">الـ 55 بوابة</span> بكل ذكاء وحب وصبر، ووصلتوا أخيراً لـ <span class="text-pink-300 font-bold">عش الزوجية</span>!
+                <br>
+                ربنا يجعل كل أيامكم سعادة وفرحة ويجمعكم في بيتكم على خير دايماً يا جوجو ❤️
+            </p>
+            <div class="grid grid-cols-3 gap-2 bg-black/50 rounded-2xl p-3.5 border border-amber-400/30">
+                <div>
+                    <div class="text-[11px] text-rose-300">النقاط النهائية</div>
+                    <div id="final-score" class="text-lg sm:text-xl font-black text-amber-300">0 ⭐</div>
+                </div>
+                <div class="border-x border-rose-500/30">
+                    <div class="text-[11px] text-rose-300">البوابات</div>
+                    <div class="text-lg sm:text-xl font-black text-emerald-400">55 / 55 ✅</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-rose-300">تاريخنا</div>
+                    <div class="text-base sm:text-lg font-black text-pink-300">10/12/2006</div>
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button id="replay-btn" class="btn-romantic flex-1 py-3 rounded-2xl text-white font-bold text-sm sm:text-base cursor-pointer">
+                    نلعبها من الأول 🔄
+                </button>
+                <button id="explore-btn" class="glass-panel flex-1 py-3 rounded-2xl text-amber-300 font-bold text-sm sm:text-base hover:bg-white/10 transition cursor-pointer">
+                    نتفرج ع الفيلا 🎆
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Touch Controls -->
+    <div id="mobile-controls" class="fixed bottom-4 left-4 z-20 hidden sm:hidden pointer-events-auto">
+        <div class="grid grid-cols-3 gap-1.5 w-32 h-32">
+            <div></div>
+            <button id="btn-up" class="touch-btn rounded-xl flex items-center justify-center text-white text-lg font-bold">▲</button>
+            <div></div>
+            <button id="btn-left" class="touch-btn rounded-xl flex items-center justify-center text-white text-lg font-bold">◀</button>
+            <button id="btn-down" class="touch-btn rounded-xl flex items-center justify-center text-white text-lg font-bold">▼</button>
+            <button id="btn-right" class="touch-btn rounded-xl flex items-center justify-center text-white text-lg font-bold">▶</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed bottom-5 right-5 z-20 glass-panel px-4 py-2.5 rounded-2xl text-rose-200 text-xs sm:text-sm font-bold opacity-0 transition-opacity duration-500 pointer-events-none">
+        مرحلة جديدة بدأت! ✨
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. ROMANTIC AUDIO ENGINE (TONE.JS)
+        // ==========================================
+        let isAudioOn = false;
+        let synth = null;
+        let melodyLoop = null;
+
+        async function initAudio() {
+            if (synth) return;
+            await Tone.start();
+            synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 1.2 }
+            }).toDestination();
+            synth.volume.value = -10;
+
+            const chords = [
+                ["C4", "E4", "G4", "B4"],
+                ["A3", "C4", "E4", "G4"],
+                ["F3", "A3", "C4", "E4"],
+                ["G3", "B3", "D4", "F4"]
+            ];
+
+            let step = 0;
+            melodyLoop = new Tone.Loop((time) => {
+                const chord = chords[Math.floor(step / 4) % chords.length];
+                const note = chord[step % 4];
+                synth.triggerAttackRelease(note, "8n", time);
+                step++;
+            }, "4n");
+        }
+
+        function playSoundEffect(type) {
+            if (!isAudioOn || !synth) return;
+            const now = Tone.now();
+            if (type === 'heart') {
+                synth.triggerAttackRelease(["E5", "G#5", "B5"], "16n", now);
+            } else if (type === 'clear') {
+                synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "16n", now);
+                synth.triggerAttackRelease(["E5", "G5", "C6"], "8n", now + 0.12);
+            } else if (type === 'wrong') {
+                synth.triggerAttackRelease(["C3", "Db3"], "8n", now);
+            } else if (type === 'hint') {
+                synth.triggerAttackRelease(["A4", "E5"], "16n", now);
+            } else if (type === 'win') {
+                const notes = ["C4", "E4", "G4", "B4", "C5", "E5", "G5", "C6"];
+                notes.forEach((n, i) => synth.triggerAttackRelease(n, "8n", now + i * 0.11));
+            }
+        }
+
+        document.getElementById('audio-toggle').addEventListener('click', async () => {
+            await initAudio();
+            isAudioOn = !isAudioOn;
+            const icon = document.getElementById('audio-icon');
+            if (isAudioOn) {
+                Tone.Transport.start();
+                melodyLoop.start(0);
+                icon.textContent = '🔊';
+            } else {
+                melodyLoop.stop();
+                Tone.Transport.stop();
+                icon.textContent = '🔇';
+            }
+        });
+
+        // ==========================================
+        // 2. 55 MARRIED LIFE & RELATIONSHIP QUESTIONS
+        // ==========================================
+        const RAW_QUESTIONS = [
+            // --- STAGE 1: فن الحوار والتفاهم وإدارة الخلافات (1 - 11) ---
+            { cat: "💖 ميثاق البداية", icon: "🔐", title: "تاريخ بداية حكايتنا", q: "قبل ما نبدأ اختبارات الحياة الزوجية.. اكتب التاريخ المميز المحفور في قلب إسلام وجوجو:", type: "secret", answer: "10/12/2006", note: "أجمل بداية لأجمل بيت في الدنيا ❤️" },
+            { cat: "🗣️ فن الحوار", icon: "🔥", title: "قانون وقت الزعل", q: "لو حصلت مشادة كلامية بينكم وحد فيكم اتعصب جداً، إيه التصرف الصح اللي يحافظ على البيت؟", options: ["نوقف النقاش فوراً لحد ما نهدى وبعدين نتكلم بهدوء", "نكمل خناق عشان كل واحد يثبت إنه صح", "ننام وإحنا زعلانين ونخاصم بعض بالأيام", "نخرج بره البيت ونقفل تليفوناتنا"], ans: 0, note: "النقاش وقت العصبية بيكسر، والهدوء بيصلح كل حاجة." },
+            { cat: "👂 لغة الإنصات", icon: "💬", title: "لما جوجو تشتكي", q: "لما جوجو ترجع من يوم طويل أو تحكي لإسلام عن حاجة مضايقاها، إيه أكتر حاجة بتكون محتاجاها؟", options: ["إن إسلام يسمعها باهتمام ويطبطب عليها من غير ما يقلل من مشاعرها", "إن إسلام يقولها إنتي مكبرة الموضوع ليه", "إن إسلام يمسك موبايله وهو بيسمعها", "إن إسلام يغير الموضوع فوراً"], ans: 0, note: "الست وقت الزعل بتحتاج احتواء وأمان قبل أي حلول." },
+            { cat: "🤝 فن الاعتذار", icon: "🕊️", title: "مين يعتذر الأول؟", q: "لو حصل سوء تفاهم بين إسلام وأم وتين، مين المفروض يبادر بالصلح والاعتذار؟", options: ["اللي بيحب التاني أكتر وباقي على زعله حتى لو مش غلطان", "الست هي اللي لازم تعتذر دايماً", "الراجل لازم يعتذر دايماً", "نستنى لحد ما ننسى من غير ما نصفي قلوبنا"], ans: 0, note: "في الجواز مفيش كرامة بتتكسر بالاعتذار، في قلوب بتتكسب." },
+            { cat: "🚫 حدود الخلاف", icon: "🛡️", title: "الممنوعات وقت الخناق", q: "إيه الحاجة اللي لازم نمنعها تماماً مهما وصلت درجة الخلاف بين الزوجين؟", options: ["الإهانة أو المعايرة بالماضي أو التهديد بالانفصال", "العتاب الهادئ", "طلب وقت للتفكير", "الصراحة بالمضايقة"], ans: 0, note: "الكلمة الجارحة بتسيب أثر حتى بعد الصلح، فاحفظوا لسانكم وقت الغضب." },
+            { cat: "🧠 فهم الطباع", icon: "🧩", title: "توقعات الجواز", q: "لما نعيش تحت سقف واحد ونكتشف عادات يومية مختلفة عن بعض، نتعامل إزاي؟", options: ["نتقبل اختلافاتنا ونحاول نتأقلم ونتنازل شوية لبعض بحب", "نحاول نغير شخصية التاني بالعافية", "نتذمر وننتقد كل تفصيلة صغيرة", "نقارن حياتنا بحياة ناس تانية"], ans: 0, note: "الجواز نجاحه في التقبل والتكامل مش في التطابق." },
+            { cat: "⏰ وقت الصفاء", icon: "☕", title: "قعدة الصراحة", q: "إيه أفضل طريقة عشان ميتراكمش جوه قلوبكم زعل قديم من مواقف صغيرة؟", options: ["نعمل قعدة صراحة أسبوعية نفضفض فيها بكل حب ومن غير لوم", "نكتم جوه نفسنا لحد ما ننفجر مرة واحدة", "نلمح بالكلام من بعيد لبعيد", "نكتب بوستات حزينة على السوشيال ميديا"], ans: 0, note: "العتاب الرقيق أول بأول بينضف القلب أول بأول." },
+            { cat: "📱 السوشيال ميديا", icon: "📵", title: "وقتكم الخاص", q: "إسلام وجوجو قاعدين مع بعض بالليل بعد يوم شغل، إيه القاعدة الذهبية لوقتكم ده؟", options: ["نسيب الموبايلات على جنب ونتكلم ونضحك سوا", "كل واحد ماسك موبايله في صمت تام", "نفتح مواضيع نكد ومشاكل الشغل", "نتفرج على التلفزيون من غير ما نبص لبعض"], ans: 0, note: "جودة الوقت اللي بتقضوه سوا أهم من عدد الساعات." },
+            { cat: "⚖️ العدل والإنصاف", icon: "💛", title: "الاعتراف بالخطأ", q: "لو إسلام أخطأ في حق جوجو أو جوجو أخطأت في حق إسلام، إيه التصرف الناضج؟", options: ["الاعتراف بالغلط بوضوح وتطييب الخاطر وتصحيح الموقف", "إنكار الغلط وقلب الترابيزة على التاني", "التبرير بأعذار وهمية", "الصمت التام لحد ما التاني يزهق"], ans: 0, note: "الاعتراف بالخطأ قوة ورجولة ونضج مش ضعف أبداً." },
+            { cat: "🌧️ ضغوط الحياة", icon: "🤲", title: "لما إسلام يكون مضغوط", q: "لما إسلام يرجع من الشغل مضغوط ومهموم، إيه أجمل دور تعمله أم وتين؟", options: ["تستقبله بابتسامة وتهيأله جو هادي وتدعمه بكلام يشجعه", "تستقبله بقائمة شكاوى وطلبات فور دخوله من الباب", "تقوله إنت دايماً مكشر وممل", "تتجاهل تعبه وتنشغل عنه"], ans: 0, note: "الزوجة الذكية بتخلي البيت جنة وجزيرة أمان لجوزها." },
+            { cat: "🌹 عهد المرحلة الأولى", icon: "✨", title: "بوابة المسؤولية والميزانية", q: "اتفقنا على قواعد الحوار والصلح! مستعدين ندخل مرحلة تخطيط بيتنا وميزانيتنا؟", options: ["مستعدين بكل وعي وتعاون وحب ❤️", "خايفين من المسؤولية", "كل واحد حر في نفسه", "مش محتاجين تخطيط"], ans: 0, note: "عاش يا أبطال! دخلتم مرحلة إدارة البيت والميزانية." },
+
+            // --- STAGE 2: ميزانية البيت، المسؤوليات والعمل (12 - 22) ---
+            { cat: "💰 إدارة المال", icon: "📊", title: "ميزانية البيت", q: "عشان بيتنا يكون مستقر مادياً وميحصلش أزمات آخر الشهر، إيه الصح؟", options: ["نعمل ميزانية شهرية واضحة للأساسيات والادخار والطوارئ معاً", "نصرف الفلوس في أول أسبوع ونستلف الباقي", "نخبي مصاريفنا عن بعض", "نشتري كل حاجة بالتقسيط من غير حساب"], ans: 0, note: "التدبير نص المعيشة، والوضوح المالي بيمنع نص مشاكل الجواز." },
+            { cat: "🏠 تقسيم الأدوار", icon: "🧹", title: "شغل البيت والتعب", q: "لما جوجو تكون تعبانة أو مشغولة في البيت، إيه التصرف الراقي من إسلام؟", options: ["يساعدها في شغل البيت أو يجهز الأكل معاها بحب وتقدير", "يقولها ده شغلك إنتي مليش دعوة", "يتذمر لو الأكل اتأخر شوية", "يقعد يتفرج عليها وهي تعبانة"], ans: 0, note: "رسولنا الكريم كان في مهنة أهله، ومساعدتك ليها بتكبرك في قلبها." },
+            { cat: "💎 القناعة والرضا", icon: "🌿", title: "المقارنة بالآخرين", q: "لو شوفنا حد من قرايبنا أو صحابنا اشترى حاجة غالية أو سافر مكان، إيه رد الفعل الصحي؟", options: ["نحمد ربنا على رزقنا ونخطط لطموحنا على قد إمكانياتنا برضا", "نضغط على إسلام عشان نجيب زيهم بالديون", "نحس إن حياتنا ناقصة ومش حلوة", "نشتكي ونقارن نفسنا بالناس طول الوقت"], ans: 0, note: "الرضا والقناعة هما سر البركة وراحة البال في أي بيت." },
+            { cat: "🛒 الأولويات", icon: "📝", title: "الكماليات والأساسيات", q: "لو معانا مبلغ زيادة آخر الشهر، إزاي نقرر نصرفه في إيه؟", options: ["نتشاور سوا ونشوف أولويات البيت أو نحوش جزء لمستقبلنا", "واحد فينا يصرفه لوحده من غير ما يقول للتاني", "نضيعه في حاجات ملهاش لازمة", "نتخانق مين ياخد الفلوس"], ans: 0, note: "المشاركة في القرارات المالية بتقوي إحساسكم إنكم فريق واحد." },
+            { cat: "🍲 تقدير المجهود", icon: "👩‍🍳", title: "تعب المطبخ والبيت", q: "لما أم وتين تتعب وتقف ساعات تعمل أكلة حلوة لإسلام، إيه أقل واجب منه؟", options: ["يمدح أكلها ويشكرها من قلبه ويدعيلها بالصحة", "ياكل في صمت من غير ولا كلمة شكر", "ينتقد الملح أو التسوية قدام الناس", "يقولها أمي بتعملها أحلى"], ans: 0, note: "كلمة 'تسلم إيدك' بتنسّي الست تعب اليوم كله!" },
+            { cat: "💼 طموح الشغل", icon: "🚀", title: "دعم النجاح", q: "لو إسلام جاله فرصة شغل أو مشروع جديد محتاج مجهود زيادة في البداية، إيه دور جوجو؟", options: ["تشجعه وتصبر معاه وتكون ضهره لحد ما ينجح", "تحبطه وتقوله مش هتنجح", "تشتكي من انشغاله طول الوقت وتضغط عليه يسيبه", "متهتمش بطموحه"], ans: 0, note: "وراء كل رجل عظيم امرأة بتآمن بيه وبتسنده." },
+            { cat: "🎁 الهدايا والتقدير", icon: "🎀", title: "الهدية مش بسعرها", q: "هل الهدايا والمفاجآت بين الزوجين لازم تكون غالية جداً عشان تفرح؟", options: ["لأ، وردة أو شوكولاتة أو رسالة بخط الإيد بتعمل سعادة كبيرة", "أيوة لازم دهب أو حاجة غالية وإلا ملهاش لازمة", "الهدايا بتخلص بعد الخطوبة", "مفيش داعي للهدايا بعد الجواز"], ans: 0, note: "الاهتمام والتفكير في التاني هو الهدية الحقيقية." },
+            { cat: "🏥 وقت المرض", icon: "🤒", title: "السند وقت التعب", q: "لو حد فيكم تعب وسخن فجأة بالليل، إيه التصرف الطبيعي بينكم؟", options: ["التاني يسهر جنبه ويهتم بدواه وراحته لحد ما يخف", "ينام ويسيبه يتصرف لوحده", "يتذمر من الإزعاج", "يقوله إنت السبب في تعبك"], ans: 0, note: "المعدن الأصيل يبان وقت الشدة والتعب." },
+            { cat: "🔐 الأمان المادي", icon: "🏦", title: "الادخار للمستقبل", q: "ليه مهم نشيل جزء صغير من دخلنا مهما كان بسيط للطوارئ؟", options: ["عشان نحمي بيتنا من أي ظرف مفاجئ من غير ما نحتاج لحد", "مش مهم نصرف كل اللي معانا", "الادخار بخل", "نستلف وقت الأزمة وخلاص"], ans: 0, note: "القرش الأبيض ينفع في اليوم الأسود ويحفظ كرامة البيت." },
+            { cat: "🛍️ التقدير المتبادل", icon: "👔", title: "تعب الشغل بره", q: "لما إسلام يشتغل ويتعب عشان يوفر حياة كريمة لبيته، إزاي جوجو تقدّر ده؟", options: ["تحافظ على بيته وماله وتدعيله وتقدّر تعبه بابتسامة", "تعتبر إن ده واجب عليه وميستاهلش شكر", "تطلب طلبات فوق طاقته وتضغط عليه", "تقلل من مجهوده"], ans: 0, note: "تقدير تعب الزوج بيخليه يشتغل وهو فرحان ومبسوط." },
+            { cat: "🌹 عهد المرحلة الثانية", icon: "🌟", title: "بوابة الأهل والخصوصية", q: "نجحنا في إدارة بيتنا وميزانيتنا! مستعدين لاختبار التعامل مع الأهل والخصوصية؟", options: ["جاهزين بكل حكمة واحترام ❤️", "مش عارفين نتصرف إزاي", "هنخلي الكل يتدخل في حياتنا", "هنقاطع الناس كلها"], ans: 0, note: "أبطال! دخلتم مرحلة الخصوصية وبر الأهل." },
+
+            // --- STAGE 3: الخصوصية، حدود الأهل والمجتمع (23 - 33) ---
+            { cat: "🔒 أسرار البيت", icon: "🤐", title: "خصوصية المشاكل", q: "لو حصل خلاف بين إسلام وجوجو، مين المسموح له يعرف تفاصيل الخلاف ده؟", options: ["محدش خالص، أسرار بيتنا تفضل بينا إحنا الاتنين وبس", "نحكي لأهالينا بالتفصيل", "نحكي لصحابنا في الشغل أو القهوة", "ننشر تلميحات على الفيس بوك"], ans: 0, note: "البيوت أسرار، وتدخل الأطراف التالتة بيكبر المشكلة مش بيحلها." },
+            { cat: "👨‍👩‍👧‍👦 بر الوالدين", icon: "💐", title: "أهلك وأهلي", q: "إيه القاعدة الذهبية في التعامل مع أهل إسلام وأهل جوجو؟", options: ["نحترم ونبر أهالينا كلنا ونعاملهم بالحسنى ونشجع بعض على صلة الرحم", "كل واحد يكره أهل التاني", "نمنع زيارة الأهل", "نتكلم وحش عن أهل شريك حياتنا"], ans: 0, note: "اللي مفيهوش خير في أهله مفيهوش خير في شريك حياته." },
+            { cat: "🛡️ حماية الشريك", icon: "⚔️", title: "الدفاع في الغياب", q: "لو حد من القرايب أو المعارف اتكلم كلمة مش حلوة عن جوجو في غيابها أو عن إسلام، إيه الواجب؟", options: ["ندافع عن شريك حياتنا بكل أدب وحزم ومنسمحش لحد يغلط فيه", "نسكت أو نضحك مجاملة", "نكمل معاهم كلام ونشتكي منه", "ننقل الكلام لبعض ونعمل فتنة"], ans: 0, note: "الزوج والزوجة لباس لبعضهما، ستر وحماية في الحضور والغياب." },
+            { cat: "🏡 استقلالية القرار", icon: "🧭", title: "قرارات بيتنا", q: "لما ناخد قرار يخص حياتنا (سفر، عفش، شغل)، مين صاحب القرار النهائي؟", options: ["إسلام وجوجو بعد التشاور مع بعض، مع الاستماع للنصيحة بأدب", "أي حد من بره يمشّي كلمته علينا", "اللي صوته أعلى", "نسيب الأمور للصدفة"], ans: 0, note: "استقلالية قراركم هي اللي بتبني شخصية بيتكم." },
+            { cat: "⚖️ التوازن الذكي", icon: "❤️", title: "التوازن بين الأم والزوجة", q: "إزاي إسلام يوازن بين بره بأمه وحبه واهتمامه بزوجته أم وتين؟", options: ["يدي كل واحدة حقها ومكانتها من غير ما يظلم حد أو يقارن بينهم", "يجي على زوجته عشان يرضي أمه", "يجي على أمه عشان يرضي زوجته", "يهرب من الاتنين"], ans: 0, note: "الراجل الحكيم بيعرف يجمع بين بر أمه وإكرام زوجته بحب وعدل." },
+            { cat: "🎉 المناسبات والزيارات", icon: "🗓️", title: "تنسيق الزيارات", q: "في الأعياد والمناسبات، إزاي ننظم زياراتنا للأهل عشان محدش يزعل؟", options: ["نتفق سوا على جدول يرضي الطرفين ونزور أهالينا كلنا بود", "نزور أهل طرف واحد بس", "نتخانق يوم العيد هنروح فين الأول", "نقضي العيد في نكد"], ans: 0, note: "التنظيم المسبق بيخلي المناسبات كلها فرحة ولمة حلوة." },
+            { cat: "👥 الأصدقاء والحدود", icon: "🚧", title: "حدود الصحوبية", q: "بعد الجواز، إزاي نعامل صحابنا من الجنسين أو الصحاب اللي بينقلوا طاقة سلبية؟", options: ["نحط حدود واضحة تحترم قدسية جوازنا ونبعد عن صحاب السوء", "نفضل بنفس علاقات العزوبية من غير حدود", "نحكي أسرار بيتنا لصحابنا", "نسمع كلام اللي بيحرضنا على شريك حياتنا"], ans: 0, note: "صيانة البيت بتبدأ من اختيار الدايرة القريبة منكم." },
+            { cat: "🤫 كتم الأسرار", icon: "🗝️", title: "الفضفضة الغلط", q: "ليه مينفعش نشتكي من عيوب شريك حياتنا لأهالينا وقت الزعل؟", options: ["لأنكم هتتصالحوا وتنسوا، لكن أهاليكم مش هينسوا وهيفضلوا شايلين منه", "عشان أهالينا يقفوا في صفنا", "عشان ننتقم منه", "مفيش مشكلة لو حكينا"], ans: 0, note: "أنتوا قلبكم أبيض وهتتصالحوا، فبلاش تشوهوا صورة بعض قدام الأهل." },
+            { cat: "🤝 الضيوف والكرم", icon: "🫖", title: "استقبال الضيوف", q: "لو جايلنا ضيوف في البيت، إزاي نتعاون عشان نكرمهم من غير ما جوجو تتعب لوحدها؟", options: ["نتعاون في التجهيز والضيافة ونكون واجهة مشرفة لبيتنا سوا", "إسلام يسيب كل حاجة على جوجو ويتذمر لو اتأخرت", "نتخانق قدام الضيوف", "نستقبلهم بتكشيرة"], ans: 0, note: "الكرم وحسن الاستقبال بركة في البيت." },
+            { cat: "💬 النقاش الخاص", icon: "👀", title: "الاختلاف قدام الناس", q: "لو اختلفنا في رأي وإحنا قاعدين وسط ناس أو أهل، نتصرف إزاي؟", options: ["نحترم بعض قدام الناس ونأجل النقاش لما نكون لوحدنا في بيتنا", "نكذب ونحرج بعض قدام الموجودين", "نرفع صوتنا عشان نثبت رأينا", "ننسحب ونسيب القعدة"], ans: 0, note: "هيبة شريك حياتك قدام الناس هي من هيبتك إنت شخصياً." },
+            { cat: "🌹 عهد المرحلة الثالثة", icon: "👶", title: "بوابة تربية 'وتين' والأسرة", q: "حفظنا أسرار بيتنا وبرّينا أهالينا! مستعدين لمرحلة تربية الأميرة 'وتين' وإخواتها؟", options: ["مستعدين نكون أحلى أب وأم في الدنيا ❤️", "التربية صعبة ومش هنعرف", "هنسيبهم للموبايل والتلفزيون", "هنربيهم بالخوف والضرب"], ans: 0, note: "ما شاء الله! دخلتم مرحلة تربية الأبناء وبناء الأسرة." },
+
+            // --- STAGE 4: تربية "وتين" وبناء الأسرة السعيدة (34 - 44) ---
+            { cat: "👶 قدوة الأبناء", icon: "🌟", title: "أول درس لـ وتين", q: "إيه أهم حاجة بتعلّم بنتنا 'وتين' الثقة في نفسها والأمان النفسي وهي بتكبر؟", options: ["إنها تشوف بابا وماما بيحبوا بعض وبيحترموا بعض قدامها", "إننا نجيب لها ألعاب غالية وبس", "إننا نصرخ في وش بعض قدامها", "إننا نسيبها طول اليوم لوحدها"], ans: 0, note: "أعظم هدية يقدمها الأب لأولاده هي حبه واحترامه لأمهم." },
+            { cat: "⚖️ وحدة القرار", icon: "👨‍👩‍👧", title: "كلمة واحدة في التربية", q: "لو ماما قالت لـ وتين 'لأ' على حاجة غلط، وبابا شايف رأي تاني، يعمل إيه؟", options: ["يدعم كلام ماما قدام البنت وبعدين يتناقش معاها في أوضتهم لوحدهم", "يكسر كلام ماما قدام البنت ويدلعها", "يتخانق مع ماما قدام البنت", "يقول للبنت مامتك مش فاهمة حاجة"], ans: 0, note: "اتفاق الأب والأم قدام الأولاد بيمنع التشتت ويعلمهم الاحترام." },
+            { cat: "🕌 القيم والأخلاق", icon: "📖", title: "تربية القلوب", q: "إزاي نزرع حب ربنا والأخلاق الحلوة في قلب وتين وإخواتها من صغرهم؟", options: ["بالقدوة الحسنة والقصص الحلوة والتشجيع بحب ولطف", "بالأوامر الجافة والعقاب القاسي", "بالمقارنة مع أولاد الجيران", "نستنى لما يكبروا لوحدهم"], ans: 0, note: "الأطفال بيقلدوا أفعالنا أكتر ما بيسمعوا كلامنا." },
+            { cat: "🧸 وقت العائلة", icon: "🎪", title: "ذكريات الطفولة", q: "إيه أجمل حاجة نعملها في الإجازة الأسبوعية لأسرتنا الصغيرة؟", options: ["نخرج أو نلعب سوا في البيت ونصنع ذكريات حلوة بعيد عن الشغل والموبايلات", "كل واحد يقعد في أوضة لوحده", "نقضي الإجازة في نكد وعتاب", "ننام طول اليوم"], ans: 0, note: "الذكريات الدافية في البيت هي اللي بتفضل محفورة في ذاكرة الأولاد." },
+            { cat: "🤱 تقدير الأمومة", icon: "💐", title: "تعب الأم مع الأطفال", q: "تربية الأطفال والسهر معاهم مجهود جبار، إزاي إسلام يدعم أم وتين في المرحلة دي؟", options: ["يشيل عنها شوية من مسؤولية الأطفال ويديها وقت ترتاح وتفصل", "يقولها كل الستات بتخلف وتربي عادي", "يتذمر من صوت عياط الطفل", "يسيبها لوحدها في كل حاجة"], ans: 0, note: "دعم الزوج لزوجته وقت تربية الأطفال بيمنع الاكتئاب ويقوي حبهم." },
+            { cat: "🗣️ الحوار مع الأبناء", icon: "👂", title: "صداقة الأولاد", q: "لما وتين تكبر وتحكي لبابا وماما عن مشكلة حصلت معاها في المدرسة، نتصرف إزاي؟", options: ["نسمعها باهتمام ومنحكمش عليها بسرعة عشان نكون دايماً ملجأها الأول", "نزعق لها ونعاقبها فوراً", "نقولها دي تفاهات متوجعيش دماغنا", "نسخر من مشاعرها"], ans: 0, note: "لما تصاحبوا أولادكم، عمرهم ما هيلجأوا لحد غريب بره البيت." },
+            { cat: "📵 الشاشات والأطفال", icon: "🎨", title: "حماية عقولهم", q: "إزاي نحمي أولادنا من إدمان الموبايلات والشاشات في السن الصغير؟", options: ["نشاركهم أنشطة ورسم وحكايات ونحدد وقت بسيط ومراقب للشاشات", "نديهم الموبايل طول اليوم عشان نرتاح من دوشة اللعب", "نسيبهم يتفرجوا على أي حاجة من غير رقابة", "نمنعهم بالعنف من غير بديل"], ans: 0, note: "البديل الممتع مع الأب والأم بيغني الطفل عن ألف شاشة." },
+            { cat: "❤️ الحب غير المشروط", icon: "🤗", title: "التشجيع وقت الغلط", q: "لو طفلنا غلط غلطة من غير قصد، إزاي نعلّمه الصح؟", options: ["نفهمه الغلط بهدوء ونعلمه يصلحه مع التأكيد إننا بنحبه", "نهينه ونقوله إنت فاشل", "نضربه قدام الناس", "نخاصمه بالأيام"], ans: 0, note: "نكره التصرف الغلط، لكن نحتوي الطفل ونعلمه الصح." },
+            { cat: "💑 وقت الزوجين وسط الأولاد", icon: "🕯️", title: "إحنا الأساس", q: "بعد وجود الأطفال وانشغال البيت، هل ننسى نفسنا كزوجين؟", options: ["أبداً، لازم نخصص وقت لينا إحنا الاتنين بس عشان يفضل حبنا متجدد", "أيوة خلاص إحنا بقينا أب وأم وبس", "الرومانسية ملهاش مكان بعد الخلفة", "نهمل شكلنا وكلامنا الحلو لبعض"], ans: 0, note: "علاقتكم القوية كزوجين هي اللي بتخلي الأولاد عايشين في أمان." },
+            { cat: "🤲 الدعاء للذرية", icon: "✨", title: "أجمل دعوة لأسرتنا", q: "إيه الدعاء اللي دايماً على لسان إسلام وأم وتين لبيتهم وأولادهم؟", options: ["ربنا هب لنا من أزواجنا وذرياتنا قرة أعين واجعلنا للمتقين إماما", "دعاء بالمال فقط", "ننسى الدعاء", "دعاء عادي"], ans: 0, note: "ربنا يبارك فيكم ويرزقكم الذرية الصالحة يا رب ❤️" },
+            { cat: "🌹 عهد المرحلة الرابعة", icon: "🏰", title: "بوابة الحب الأبدي وتجديد الشغف", q: "بنينا أسرة متماسكة ومليانة دفا! مستعدين للمرحلة الأخيرة: سر استمرار الحب طول العمر؟", options: ["مستعدين نجدد حبنا كل يوم كأنه أول يوم ❤️", "الحب بيقل مع الوقت", "المسؤوليات بتقتل المشاعر", "مش مهم التجديد"], ans: 0, note: "وصلتم للمرحلة الأخيرة: أسرار استمرار الحب لآخر العمر!" },
+
+            // --- STAGE 5: تجديد الحب، الوفاء وعش الزوجية (45 - 55) ---
+            { cat: "🌹 تجديد الحب", icon: "💌", title: "كلام الحب بعد الجواز", q: "في ناس بتفتكر إن كلمة 'بحبك' ملهاش لازمة بعد الجواز وعشرة السنين، إيه رأيكم؟", options: ["بالعكس، كلمة بحبك والغزل بعد الجواز هما روح البيت ووقود السعادة", "فعلاً الأفعال تغني عن الكلام تماماً", "عيب نقول كلام حب بعد ما نكبر", "كلام الحب للخطوبة بس"], ans: 0, note: "الودن بتعشق قبل العين أحياناً، فمتبخلوش بالكلام الحلو على بعض." },
+            { cat: "💃 الاهتمام بالنفس", icon: "✨", title: "التجديد والاهتمام", q: "إزاي نحافظ على جاذبيتنا واهتمامنا بنفسنا لبعض جوه البيت بعد الجواز؟", options: ["نهتم بنظافتنا ولبسنا وريحتنا الحلوة لبعض جوه البيت مش للخروج بس", "نهتم بنفسنا لما نخرج للناس بس", "الإهمال دليل على الراحة في البيت", "مش مهم الشكل بعد الجواز"], ans: 0, note: "تزيّن الزوج والزوجة لبعضهم بيعف القلب ويجدد الشغف." },
+            { cat: "🌟 الامتنان اليومي", icon: "🙏", title: "التركيز على الحلو", q: "لما الشيطان يحاول يفكرك بموقف ضايقك من شريك حياتك، إزاي تغلبه؟", options: ["نفتكر مواقفه الحلوة وتضحياته وحسناته الكتير ونشكر ربنا عليه", "نركز على العيوب وننسى كل الحلو", "نكتم الغضب ونكشر", "نعاتب بعنف"], ans: 0, note: "ولا تنسوا الفضل بينكم.. هي دي القاعدة الربانية لدوام المودة." },
+            { cat: "✈️ كسر الروتين", icon: "🌅", title: "مغامرة جديدة", q: "لما نحس إن روتين الشغل والبيت زاد شوية، إزاي نكسر الملل سوا؟", options: ["نتمشى سوا بالليل، نشرب حاجة في مكان هادي، أو نعمل مفاجأة بسيطة في البيت", "نستسلم للملل والروتين", "كل واحد يخرج مع صحابه ويسيب التاني", "نتخانق عشان نغير جو"], ans: 0, note: "أبسط خروجة سوا بإيدين متشابكة بترجع روح البدايات." },
+            { cat: "🤝 الشراكة الروحية", icon: "🕌", title: "الطريق للجنة", q: "إيه أجمل حاجة تقرب إسلام وجوجو من ربنا ومن بعض في بيتهم الجديد؟", options: ["نصلي سوا جماعة، نقرأ ورد قرآن، ونشجع بعض على الطاعة", "كل واحد في حاله", "نأجل العبادة لما نكبر", "ننشغل بالدنيا وبس"], ans: 0, note: "البيت اللي بيتذكر فيه ربنا بتنزل فيه السكينة والملائكة." },
+            { cat: "👵👴 رفيق العمر", icon: "🤍", title: "وعد المشيب", q: "لما يكبر بينا العمر وتعدي 40 و50 سنة جواز، إيه الوعد اللي بين إسلام وأم وتين؟", options: ["نفضل إيدينا في إيد بعض، نضحك سوا، ونكون ونس وسند لبعض لآخر نفس", "نمل من بعض", "كل واحد يعيش في عالمه", "ننسى ذكرياتنا"], ans: 0, note: "أجمل قصة حب هي اللي بتكمل لحد المشيب بنفس الدفا." },
+            { cat: "🛡️ الوفاء المطلق", icon: "💍", title: "معنى الدبلة", q: "الدبلة اللي في إيديكم مش مجرد معدن، هي رمز لإيه في حياتكم؟", options: ["عهد أبدي بالوفاء، الصون، والاحترام في السر والعلن", "مجرد زينة", "عادة اجتماعية وخلاص", "تذكار مؤقت"], ans: 0, note: "الوفاء هو تاج الحب الحقيقي." },
+            { cat: "🌈 التفاؤل والأمل", icon: "☀️", title: "نظرتنا لبكرة", q: "مهما قابلتنا تحديات في الحياة، إيه شعار بيت إسلام وجوجو؟", options: ["مع بعض وبفضل ربنا هنعدي أي صعب وهنعيش أحلى أيام", "الدنيا صعبة ومفيش أمل", "كل واحد يشيل همّه لوحده", "الخوف من المستقبل"], ans: 0, note: "التفاؤل وحسن الظن بالله بيفتحوا كل الأبواب المقفولة." },
+            { cat: "💖 ميثاق أم وتين", icon: "👑", title: "كلمة من القلب لـ جوجو", q: "إيه الرسالة اللي إسلام بيأكدها لـ جوجو أم وتين على باب بيتهم؟", options: ["إنتي أحلى نعمة في حياتي، وهفضل أحبك وأصونك طول عمري ❤️", "رسالة عادية", "مفيش كلام", "هنشوف بعدين"], ans: 0, note: "ربنا يحفظكم لبعض ويجعلها قرة عينك دايماً يا إسلام!" },
+            { cat: "🔐 البوابة 54", icon: "🗝️", title: "تأكيد كلمة السر الأبدية", q: "عشان نستلم مفتاح عش الزوجية، اكتبوا تاريخكم الغالي للمرة الأخيرة: 10/12/2006", type: "secret", answer: "10/12/2006", note: "تم فتح قفل الأمان بنجاح يا أبطال الحب!" },
+            { cat: "🏰 البوابة 55 الأخيرة", icon: "🥂", title: "دخول عش الزوجية", q: "وصلنا لباب بيتنا أخيراً بعد 55 اختبار للحياة الزوجية! مستعدين تدخلوا بيتكم سوا؟", options: ["بسم الله توكلنا على الله.. بحبك يا جوجو يا أم وتين للأبد ❤️", "لسه مترددين", "نرجع من الأول", "انتهت الرحلة"], ans: 0, note: "مبرووووك! اتفتح باب عش الزوجية ليكم للأبد! 🎆🏡💖" }
+        ];
+
+        // Generate 55 Gate Objects positioned every 14 units along -Z
+        const GATE_SPACING = 14;
+        const CHALLENGES = RAW_QUESTIONS.map((item, idx) => ({
+            ...item,
+            id: idx,
+            gateNum: idx + 1,
+            zPos: -(idx + 1) * GATE_SPACING,
+            cleared: false,
+            meshGroup: null,
+            barrierMesh: null
+        }));
+
+        const GOAL_Z = -(CHALLENGES.length + 1) * GATE_SPACING - 4; // Around -788
+
+        // ==========================================
+        // 3. 5 DYNAMIC STAGES CONFIGURATION
+        // ==========================================
+        const STAGES = [
+            { maxGate: 11, name: "المرحلة 1: بداية الحكاية ✨", bg: 0x090207, fog: 0x140410, accent: 0xf43f5e },
+            { maxGate: 22, name: "المرحلة 2: اختبارات الثقة 💎", bg: 0x040714, fog: 0x09112b, accent: 0x38bdf8 },
+            { maxGate: 33, name: "المرحلة 3: تحدي الذكاء والألغاز 🧠", bg: 0x0d0417, fog: 0x1d0933, accent: 0xc084fc },
+            { maxGate: 44, name: "المرحلة 4: صمود الحب 🔥", bg: 0x140504, fog: 0x2b0b08, accent: 0xf59e0b },
+            { maxGate: 55, name: "المرحلة 5: مشارف عش الزوجية 🏰", bg: 0x12030d, fog: 0x26061c, accent: 0xfbbf24 }
+        ];
+
+        // ==========================================
+        // 4. THREE.JS SCENE SETUP
+        // ==========================================
+        const canvas = document.getElementById('game-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(STAGES[0].bg);
+        scene.fog = new THREE.FogExp2(STAGES[0].fog, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 250);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffb6c1, 0.7);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffe4e1, 0.9);
+        dirLight.position.set(15, 30, 20);
+        scene.add(dirLight);
+
+        const coupleLight = new THREE.PointLight(0xff4d88, 2.0, 20);
+        coupleLight.position.set(0, 3, 0);
+        scene.add(coupleLight);
+
+        // ==========================================
+        // 5. EXTENDED PATHWAY & ENVIRONMENT (820 Units)
+        // ==========================================
+        const totalPathLen = Math.abs(GOAL_Z) + 40;
+        const pathCenterZ = -totalPathLen / 2 + 10;
+
+        // Ground
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(240, totalPathLen + 100),
+            new THREE.MeshStandardMaterial({ color: 0x080206, roughness: 0.9 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.z = pathCenterZ;
+        scene.add(ground);
+
+        // Glowing Bridge Path
+        const pathWidth = 7.2;
+        const pathMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(pathWidth, totalPathLen),
+            new THREE.MeshStandardMaterial({
+                color: 0x24071a,
+                emissive: 0x3b0a2a,
+                emissiveIntensity: 0.45,
+                roughness: 0.4
+            })
+        );
+        pathMesh.rotation.x = -Math.PI / 2;
+        pathMesh.position.set(0, 0.02, pathCenterZ);
+        scene.add(pathMesh);
+
+        // Neon Side Rails
+        const borderMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+        const leftBorder = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, totalPathLen), borderMat);
+        leftBorder.position.set(-pathWidth / 2, 0.09, pathCenterZ);
+        const rightBorder = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, totalPathLen), borderMat);
+        rightBorder.position.set(pathWidth / 2, 0.09, pathCenterZ);
+        scene.add(leftBorder, rightBorder);
+
+        // Lamp Posts every 28 units
+        for (let z = -7; z >= GOAL_Z + 10; z -= 28) {
+            [-4.3, 4.3].forEach(x => {
+                const postGroup = new THREE.Group();
+                const pole = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.06, 0.08, 3.2, 6),
+                    new THREE.MeshStandardMaterial({ color: 0x1f101a })
+                );
+                pole.position.y = 1.6;
+                const orb = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.26, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: Math.abs(z) % 56 === 0 ? 0xfbbf24 : 0xf43f5e })
+                );
+                orb.position.y = 3.3;
+                postGroup.add(pole, orb);
+                postGroup.position.set(x, 0, z);
+                scene.add(postGroup);
+            });
+        }
+
+        // Cosmic Starfield along the whole journey
+        const starsGeo = new THREE.BufferGeometry();
+        const starCount = 3000;
+        const starPositions = new Float32Array(starCount * 3);
+        const starColors = new Float32Array(starCount * 3);
+        const palette = [new THREE.Color(0xff7597), new THREE.Color(0xfbbf24), new THREE.Color(0xffffff), new THREE.Color(0x38bdf8)];
+
+        for (let i = 0; i < starCount; i++) {
+            starPositions[i * 3] = (Math.random() - 0.5) * 160;
+            starPositions[i * 3 + 1] = Math.random() * 55 + 2;
+            starPositions[i * 3 + 2] = -Math.random() * (totalPathLen + 60) + 20;
+            const col = palette[Math.floor(Math.random() * palette.length)];
+            starColors[i * 3] = col.r;
+            starColors[i * 3 + 1] = col.g;
+            starColors[i * 3 + 2] = col.b;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        starsGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+        const starField = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: 0.45, vertexColors: true, transparent: true, opacity: 0.85 }));
+        scene.add(starField);
+
+        // ==========================================
+        // 6. 3D COUPLE AVATARS (ISLAM & JOJO)
+        // ==========================================
+        function createHeartMesh(scale = 0.4, colorHex = 0xf43f5e) {
+            const x = 0, y = 0;
+            const heartShape = new THREE.Shape();
+            heartShape.moveTo(x + 0.5, y + 0.5);
+            heartShape.bezierCurveTo(x + 0.5, y + 0.5, x + 0.4, y, x, y);
+            heartShape.bezierCurveTo(x - 0.6, y, x - 0.6, y + 0.7, x - 0.6, y + 0.7);
+            heartShape.bezierCurveTo(x - 0.6, y + 1.1, x - 0.3, y + 1.54, x + 0.5, y + 1.9);
+            heartShape.bezierCurveTo(x + 1.2, y + 1.54, x + 1.6, y + 1.1, x + 1.6, y + 0.7);
+            heartShape.bezierCurveTo(x + 1.6, y + 0.7, x + 1.6, y, x + 1.0, y);
+            heartShape.bezierCurveTo(x + 0.7, y, x + 0.5, y + 0.5, x + 0.5, y + 0.5);
+
+            const geometry = new THREE.ExtrudeGeometry(heartShape, { depth: 0.22, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.06, bevelThickness: 0.06 });
+            geometry.center();
+            const material = new THREE.MeshStandardMaterial({
+                color: colorHex,
+                emissive: colorHex,
+                emissiveIntensity: 0.5,
+                roughness: 0.2
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.z = Math.PI;
+            mesh.scale.set(scale, scale, scale);
+            return mesh;
+        }
+
+        const coupleGroup = new THREE.Group();
+
+        function createPerson(shirtColor, hairColor, isFemale) {
+            const person = new THREE.Group();
+            const bodyGeo = isFemale
+                ? new THREE.ConeGeometry(0.42, 1.15, 16)
+                : new THREE.CylinderGeometry(0.28, 0.32, 1.1, 16);
+            const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.4 }));
+            body.position.y = 0.85;
+            person.add(body);
+
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.3, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.5 })
+            );
+            head.position.y = 1.65;
+            person.add(head);
+
+            if (isFemale) {
+                const hair = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.33, 16, 16),
+                    new THREE.MeshStandardMaterial({ color: hairColor })
+                );
+                hair.position.set(0, 1.7, -0.06);
+                person.add(hair);
+
+                // Golden Crown
+                const crown = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.16, 0.22, 6),
+                    new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+                );
+                crown.position.set(0, 2.05, 0);
+                person.add(crown);
+            } else {
+                const hair = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.31, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+                    new THREE.MeshStandardMaterial({ color: hairColor })
+                );
+                hair.position.set(0, 1.68, 0);
+                person.add(hair);
+            }
+
+            const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b });
+            const leftLeg = new THREE.Mesh(legGeo, legMat);
+            leftLeg.position.set(-0.12, 0.25, 0);
+            const rightLeg = new THREE.Mesh(legGeo, legMat);
+            rightLeg.position.set(0.12, 0.25, 0);
+            person.add(leftLeg, rightLeg);
+
+            person.userData = { leftLeg, rightLeg };
+            return person;
+        }
+
+        const him = createPerson(0x2563eb, 0x111827, false);
+        him.position.x = -0.45;
+        const her = createPerson(0xf43f5e, 0x3b1d14, true);
+        her.position.x = 0.45;
+
+        const handLink = new THREE.Mesh(
+            new THREE.SphereGeometry(0.13, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+        );
+        handLink.position.set(0, 0.95, 0);
+
+        const floatingHeart = createHeartMesh(0.26, 0xff2a6d);
+        floatingHeart.position.set(0, 2.55, 0);
+
+        coupleGroup.add(him, her, handLink, floatingHeart);
+        scene.add(coupleGroup);
+
+        // ==========================================
+        // 7. 55 3D GATES WITH NUMBER BADGES
+        // ==========================================
+        function createGateNumberTexture(num, stageColorHex) {
+            const c = document.createElement('canvas');
+            c.width = 256;
+            c.height = 128;
+            const ctx = c.getContext('2d');
+
+            ctx.fillStyle = 'rgba(18, 4, 15, 0.9)';
+            ctx.beginPath();
+            ctx.roundRect(10, 10, 236, 108, 28);
+            ctx.fill();
+
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#' + stageColorHex.toString(16).padStart(6, '0');
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 48px Cairo, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`بوابة ${num}`, 128, 66);
+
+            return new THREE.CanvasTexture(c);
+        }
+
+        const pillarGeo = new THREE.BoxGeometry(0.45, 4.2, 0.45);
+        const archGeo = new THREE.BoxGeometry(7.2, 0.45, 0.55);
+        const barrierGeo = new THREE.PlaneGeometry(6.2, 3.9);
+        const badgeGeo = new THREE.PlaneGeometry(2.4, 1.2);
+
+        CHALLENGES.forEach((ch) => {
+            const stageIdx = Math.min(4, Math.floor((ch.gateNum - 1) / 11));
+            const accentHex = STAGES[stageIdx].accent;
+
+            const gateGroup = new THREE.Group();
+
+            const pillarMat = new THREE.MeshStandardMaterial({
+                color: 0x1e0826,
+                emissive: accentHex,
+                emissiveIntensity: 0.35
+            });
+            const pLeft = new THREE.Mesh(pillarGeo, pillarMat);
+            pLeft.position.set(-3.3, 2.1, 0);
+            const pRight = new THREE.Mesh(pillarGeo, pillarMat);
+            pRight.position.set(3.3, 2.1, 0);
+
+            const arch = new THREE.Mesh(archGeo, new THREE.MeshBasicMaterial({ color: accentHex }));
+            arch.position.set(0, 4.2, 0);
+
+            // Gate Number Sign above Arch
+            const badgeTex = createGateNumberTexture(ch.gateNum, accentHex);
+            const badgeMesh = new THREE.Mesh(badgeGeo, new THREE.MeshBasicMaterial({ map: badgeTex, transparent: true }));
+            badgeMesh.position.set(0, 5.1, 0);
+
+            // Glowing Barrier
+            const barrier = new THREE.Mesh(
+                barrierGeo,
+                new THREE.MeshBasicMaterial({
+                    color: accentHex,
+                    transparent: true,
+                    opacity: 0.32,
+                    side: THREE.DoubleSide
+                })
+            );
+            barrier.position.set(0, 2.0, 0);
+
+            gateGroup.add(pLeft, pRight, arch, badgeMesh, barrier);
+            gateGroup.position.set(0, 0, ch.zPos);
+            scene.add(gateGroup);
+
+            ch.meshGroup = gateGroup;
+            ch.barrierMesh = barrier;
+        });
+
+        // ==========================================
+        // 8. GRAND VILLA ("عش الزوجية") AT END
+        // ==========================================
+        const houseGroup = new THREE.Group();
+
+        const yard = new THREE.Mesh(
+            new THREE.CylinderGeometry(9.5, 10, 0.45, 32),
+            new THREE.MeshStandardMaterial({ color: 0x2e0820, emissive: 0x4c0519, emissiveIntensity: 0.4 })
+        );
+        yard.position.y = 0.22;
+        houseGroup.add(yard);
+
+        const walls = new THREE.Mesh(
+            new THREE.BoxGeometry(7.5, 4.6, 6.2),
+            new THREE.MeshStandardMaterial({ color: 0xfff1f2, roughness: 0.3 })
+        );
+        walls.position.y = 2.6;
+        houseGroup.add(walls);
+
+        const roof = new THREE.Mesh(
+            new THREE.ConeGeometry(6.1, 3.1, 4),
+            new THREE.MeshStandardMaterial({ color: 0xe11d48, emissive: 0x881337, emissiveIntensity: 0.35 })
+        );
+        roof.position.y = 6.4;
+        roof.rotation.y = Math.PI / 4;
+        houseGroup.add(roof);
+
+        const door = new THREE.Mesh(
+            new THREE.BoxGeometry(1.6, 2.6, 0.25),
+            new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.6 })
+        );
+        door.position.set(0, 1.6, 3.15);
+        houseGroup.add(door);
+
+        const winGeo = new THREE.PlaneGeometry(1.25, 1.25);
+        const winMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const winLeft = new THREE.Mesh(winGeo, winMat);
+        winLeft.position.set(-2.2, 2.8, 3.12);
+        const winRight = new THREE.Mesh(winGeo, winMat);
+        winRight.position.set(2.2, 2.8, 3.12);
+        houseGroup.add(winLeft, winRight);
+
+        const houseHeart = createHeartMesh(1.1, 0xfbbf24);
+        houseHeart.position.set(0, 8.4, 0);
+        houseGroup.add(houseHeart);
+
+        const houseLight = new THREE.PointLight(0xfbbf24, 3, 30);
+        houseLight.position.set(0, 5.5, 4.5);
+        houseGroup.add(houseLight);
+
+        houseGroup.position.set(0, 0, GOAL_Z - 5);
+        scene.add(houseGroup);
+
+        // ==========================================
+        // 9. PARTICLE EXPLOSIONS
+        // ==========================================
+        const bursts = [];
+
+        function spawnBurst(x, y, z, colorHex = 0xf43f5e, count = 45) {
+            const geo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const velocities = [];
+
+            for (let i = 0; i < count; i++) {
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                const speed = 0.08 + Math.random() * 0.24;
+                velocities.push({
+                    vx: Math.sin(phi) * Math.cos(theta) * speed,
+                    vy: Math.abs(Math.cos(phi)) * speed + 0.06,
+                    vz: Math.sin(phi) * Math.sin(theta) * speed
+                });
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({ color: colorHex, size: 0.36, transparent: true, opacity: 1 });
+            const points = new THREE.Points(geo, mat);
+            scene.add(points);
+            bursts.push({ points, velocities, life: 1.0 });
+        }
+
+        // ==========================================
+        // 10. CONTROLS & AUTO-WALK
+        // ==========================================
+        const keys = { up: false, down: false, left: false, right: false };
+        let autoWalk = true;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        function bindTouchBtn(btnId, dirKey) {
+            const btn = document.getElementById(btnId);
+            const start = (e) => { e.preventDefault(); keys[dirKey] = true; btn.classList.add('active'); };
+            const end = (e) => { e.preventDefault(); keys[dirKey] = false; btn.classList.remove('active'); };
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
+        }
+        bindTouchBtn('btn-up', 'up');
+        bindTouchBtn('btn-down', 'down');
+        bindTouchBtn('btn-left', 'left');
+        bindTouchBtn('btn-right', 'right');
+
+        const autoWalkBtn = document.getElementById('autowalk-btn');
+        autoWalkBtn.addEventListener('click', () => {
+            autoWalk = !autoWalk;
+            const txt = document.getElementById('autowalk-text');
+            if (autoWalk) {
+                txt.textContent = 'مشي تلقائي: مفعل';
+                autoWalkBtn.classList.replace('text-rose-300', 'text-emerald-300');
+            } else {
+                txt.textContent = 'مشي تلقائي: متوقف';
+                autoWalkBtn.classList.replace('text-emerald-300', 'text-rose-300');
+            }
+        });
+
+        // Camera Orbit
+        let camAngle = 0;
+        let camHeight = 4.6;
+        let isDragging = false;
+        let prevMouseX = 0;
+        let prevMouseY = 0;
+
+        canvas.addEventListener('mousedown', (e) => { isDragging = true; prevMouseX = e.clientX; prevMouseY = e.clientY; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            camAngle -= (e.clientX - prevMouseX) * 0.007;
+            camHeight = Math.max(2.2, Math.min(11, camHeight + (e.clientY - prevMouseY) * 0.03));
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                prevMouseX = e.touches[0].clientX;
+                prevMouseY = e.touches[0].clientY;
+            }
+        });
+        canvas.addEventListener('touchend', () => { isDragging = false; });
+        canvas.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            camAngle -= (e.touches[0].clientX - prevMouseX) * 0.008;
+            camHeight = Math.max(2.2, Math.min(11, camHeight + (e.touches[0].clientY - prevMouseY) * 0.03));
+            prevMouseX = e.touches[0].clientX;
+            prevMouseY = e.touches[0].clientY;
+        });
+
+        document.getElementById('reset-cam-btn').addEventListener('click', () => {
+            camAngle = 0;
+            camHeight = 4.6;
+        });
+
+        // ==========================================
+        // 11. GAME STATE, LIVES, HINTS & CHALLENGES
+        // ==========================================
+        let gameState = 'START';
+        let score = 0;
+        let streak = 0;
+        let lives = 5;
+        let hintsLeft = 3;
+        let gatesCleared = 0;
+        let currentStageIdx = 0;
+        let activeChallenge = null;
+        let hintUsedOnCurrent = false;
+        let fireworkTimer = 0;
+
+        const hudEl = document.getElementById('hud');
+        const startScreen = document.getElementById('start-screen');
+        const challengeModal = document.getElementById('challenge-modal');
+        const outOfLivesModal = document.getElementById('out-of-lives-modal');
+        const victoryModal = document.getElementById('victory-modal');
+        const mobileControls = document.getElementById('mobile-controls');
+
+        function updateHUD() {
+            document.getElementById('lives-display').textContent = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, 5 - lives));
+            document.getElementById('score-count').textContent = score;
+            document.getElementById('gates-count').textContent = `بوابة ${gatesCleared} / 55`;
+            document.getElementById('hints-left').textContent = hintsLeft;
+
+            const pct = Math.round((gatesCleared / 55) * 100);
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+
+            const streakBadge = document.getElementById('streak-badge');
+            if (streak >= 2) {
+                streakBadge.classList.remove('hidden');
+                streakBadge.textContent = `🔥 x${Math.min(5, streak)}`;
+            } else {
+                streakBadge.classList.add('hidden');
+            }
+
+            // Stage Transition Check
+            const newStageIdx = Math.min(4, Math.floor(gatesCleared / 11));
+            if (newStageIdx !== currentStageIdx) {
+                currentStageIdx = newStageIdx;
+                const st = STAGES[currentStageIdx];
+                document.getElementById('stage-name').textContent = st.name;
+                scene.background = new THREE.Color(st.bg);
+                scene.fog = new THREE.FogExp2(st.fog, 0.015);
+                borderMat.color.setHex(st.accent);
+                showToast(`دخلتم ${st.name}`);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3200);
+        }
+
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            startScreen.classList.add('hidden');
+            hudEl.classList.remove('hidden');
+            mobileControls.classList.remove('hidden');
+            gameState = 'PLAYING';
+            updateHUD();
+            showToast("انطلقت رحلتكم نحو عش الزوجية! ❤️");
+
+            try {
+                await initAudio();
+                isAudioOn = true;
+                Tone.Transport.start();
+                melodyLoop.start(0);
+                document.getElementById('audio-icon').textContent = '🔊';
+            } catch (e) {}
+        });
+
+        // Shuffle options helper while keeping track of correct index
+        function getShuffledOptions(options, correctIdx) {
+            const mapped = options.map((text, idx) => ({ text, isCorrect: idx === correctIdx }));
+            for (let i = mapped.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [mapped[i], mapped[j]] = [mapped[j], mapped[i]];
+            }
+            return mapped;
+        }
+
+        function openChallengeModal(challenge) {
+            gameState = 'MODAL';
+            activeChallenge = challenge;
+            hintUsedOnCurrent = false;
+            keys.up = keys.down = keys.left = keys.right = false;
+
+            document.getElementById('challenge-badge').textContent = `بوابة ${challenge.gateNum} / 55`;
+            document.getElementById('challenge-category').textContent = challenge.cat;
+            document.getElementById('challenge-icon').textContent = challenge.icon;
+            document.getElementById('challenge-title').textContent = challenge.title;
+            document.getElementById('challenge-question').textContent = challenge.q;
+            document.getElementById('challenge-feedback').textContent = '';
+
+            const optionsContainer = document.getElementById('challenge-options');
+            const secretContainer = document.getElementById('secret-input-container');
+            const hintBtn = document.getElementById('hint-btn');
+
+            optionsContainer.innerHTML = '';
+
+            if (challenge.type === 'secret') {
+                optionsContainer.classList.add('hidden');
+                secretContainer.classList.remove('hidden');
+                hintBtn.classList.add('hidden');
+                const input = document.getElementById('secret-answer-input');
+                input.value = '';
+                setTimeout(() => input.focus(), 100);
+            } else {
+                optionsContainer.classList.remove('hidden');
+                secretContainer.classList.add('hidden');
+                hintBtn.classList.remove('hidden');
+
+                const shuffled = getShuffledOptions(challenge.options, challenge.ans);
+                shuffled.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn w-full p-3 sm:p-3.5 rounded-2xl text-white text-xs sm:text-sm font-semibold cursor-pointer block text-right';
+                    btn.textContent = opt.text;
+                    btn.dataset.correct = opt.isCorrect ? '1' : '0';
+                    btn.onclick = () => handleAnswer(opt.isCorrect, btn);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            challengeModal.classList.remove('hidden');
+            challengeModal.classList.add('flex');
+        }
+
+        // Secret input submit
+        document.getElementById('secret-submit-btn').addEventListener('click', () => {
+            const val = document.getElementById('secret-answer-input').value.trim();
+            const isCorrect = val === activeChallenge.answer;
+            handleAnswer(isCorrect, null);
+        });
+
+        document.getElementById('secret-answer-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('secret-submit-btn').click();
+            }
+        });
+
+        // Hint System (Eliminates 2 wrong answers)
+        document.getElementById('hint-btn').addEventListener('click', () => {
+            if (hintsLeft <= 0 || hintUsedOnCurrent || !activeChallenge || activeChallenge.type === 'secret') return;
+            const btns = Array.from(document.querySelectorAll('#challenge-options button'));
+            const wrongBtns = btns.filter(b => b.dataset.correct === '0' && !b.disabled);
+            if (wrongBtns.length >= 2) {
+                wrongBtns[0].disabled = true;
+                wrongBtns[1].disabled = true;
+                hintsLeft--;
+                hintUsedOnCurrent = true;
+                playSoundEffect('hint');
+                updateHUD();
+                document.getElementById('challenge-feedback').textContent = "💡 تم حذف إجابتين خطأ بتلميح من القلب!";
+            }
+        });
+
+        function handleAnswer(isCorrect, clickedBtn) {
+            const feedback = document.getElementById('challenge-feedback');
+            const card = document.getElementById('challenge-card');
+
+            if (isCorrect) {
+                playSoundEffect('clear');
+                streak++;
+                const multiplier = Math.min(5, Math.max(1, streak));
+                score += 100 * multiplier;
+
+                feedback.className = "text-xs sm:text-sm font-bold min-h-[22px] text-emerald-300";
+                feedback.textContent = `✅ إجابة صحيحة! ${activeChallenge.note}`;
+
+                activeChallenge.cleared = true;
+                gatesCleared++;
+                updateHUD();
+
+                // Disable all option buttons to prevent double click
+                document.querySelectorAll('#challenge-options button').forEach(b => b.disabled = true);
+
+                // Shatter 3D barrier
+                if (activeChallenge.barrierMesh) {
+                    activeChallenge.meshGroup.remove(activeChallenge.barrierMesh);
+                }
+                const stageAccent = STAGES[currentStageIdx].accent;
+                spawnBurst(0, 2.2, activeChallenge.zPos, stageAccent, 60);
+                spawnBurst(0, 2.2, activeChallenge.zPos, 0xfbbf24, 45);
+
+                setTimeout(() => {
+                    challengeModal.classList.add('hidden');
+                    challengeModal.classList.remove('flex');
+                    gameState = 'PLAYING';
+                }, 1150);
+            } else {
+                playSoundEffect('wrong');
+                streak = 0;
+                lives--;
+                updateHUD();
+
+                if (clickedBtn) {
+                    clickedBtn.disabled = true;
+                    clickedBtn.style.borderColor = '#ef4444';
+                    clickedBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                }
+
+                card.classList.remove('shake-anim');
+                void card.offsetWidth;
+                card.classList.add('shake-anim');
+
+                if (lives <= 0) {
+                    challengeModal.classList.add('hidden');
+                    challengeModal.classList.remove('flex');
+                    outOfLivesModal.classList.remove('hidden');
+                    outOfLivesModal.classList.add('flex');
+                } else {
+                    feedback.className = "text-xs sm:text-sm font-bold min-h-[22px] text-rose-400";
+                    feedback.textContent = `❌ إجابة غير صحيحة! خسرت قلباً.. ركز يا بطل وحاول تاني ❤️`;
+                }
+            }
+        }
+
+        // Promise Revive
+        document.getElementById('promise-revive-btn').addEventListener('click', () => {
+            lives = 3;
+            updateHUD();
+            outOfLivesModal.classList.add('hidden');
+            outOfLivesModal.classList.remove('flex');
+            openChallengeModal(activeChallenge);
+        });
+
+        function triggerVictory() {
+            gameState = 'VICTORY';
+            keys.up = keys.down = keys.left = keys.right = false;
+            playSoundEffect('win');
+            document.getElementById('final-score').textContent = `${score} ⭐`;
+            victoryModal.classList.remove('hidden');
+            victoryModal.classList.add('flex');
+
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    spawnBurst((Math.random() - 0.5) * 12, 5 + Math.random() * 4, GOAL_Z - 3, i % 2 === 0 ? 0xfbbf24 : 0xf43f5e, 75);
+                }, i * 320);
+            }
+        }
+
+        document.getElementById('explore-btn').addEventListener('click', () => {
+            victoryModal.classList.add('hidden');
+            victoryModal.classList.remove('flex');
+            showToast("ألف مبروك يا إسلام ويا جوجو! استمتعوا بالاحتفال 🎆🏰");
+        });
+
+        document.getElementById('replay-btn').addEventListener('click', () => {
+            coupleGroup.position.set(0, 0, 0);
+            score = 0;
+            streak = 0;
+            lives = 5;
+            hintsLeft = 3;
+            gatesCleared = 0;
+            currentStageIdx = 0;
+
+            scene.background = new THREE.Color(STAGES[0].bg);
+            scene.fog = new THREE.FogExp2(STAGES[0].fog, 0.015);
+            borderMat.color.setHex(STAGES[0].accent);
+            document.getElementById('stage-name').textContent = STAGES[0].name;
+
+            CHALLENGES.forEach(ch => {
+                ch.cleared = false;
+                if (ch.barrierMesh && !ch.meshGroup.children.includes(ch.barrierMesh)) {
+                    ch.meshGroup.add(ch.barrierMesh);
+                }
+            });
+
+            updateHUD();
+            victoryModal.classList.add('hidden');
+            victoryModal.classList.remove('flex');
+            gameState = 'PLAYING';
+        });
+
+        // ==========================================
+        // 12. MAIN ANIMATION LOOP
+        // ==========================================
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            starField.rotation.z = Math.sin(time * 0.05) * 0.03;
+
+            houseHeart.rotation.y = time * 1.6;
+            houseHeart.position.y = 8.4 + Math.sin(time * 2.5) * 0.25;
+
+            floatingHeart.rotation.y = time * 2.5;
+            floatingHeart.position.y = 2.55 + Math.sin(time * 4) * 0.12;
+
+            let isMoving = false;
+            const moveSpeed = 0.24; // Swift pace between 55 gates
+
+            if (gameState === 'PLAYING') {
+                let dx = 0;
+                let dz = 0;
+
+                if (autoWalk || keys.up) dz -= moveSpeed;
+                if (keys.down) dz += moveSpeed;
+                if (keys.left) dx -= moveSpeed * 0.8;
+                if (keys.right) dx += moveSpeed * 0.8;
+
+                if (dx !== 0 || dz !== 0) {
+                    isMoving = true;
+                    const nextX = Math.max(-2.7, Math.min(2.7, coupleGroup.position.x + dx));
+                    let nextZ = Math.max(GOAL_Z, Math.min(2, coupleGroup.position.z + dz));
+
+                    // Check Gate Collision
+                    for (let i = gatesCleared; i < CHALLENGES.length; i++) {
+                        const ch = CHALLENGES[i];
+                        if (!ch.cleared && nextZ <= ch.zPos + 1.35) {
+                            nextZ = ch.zPos + 1.35;
+                            openChallengeModal(ch);
+                            break;
+                        }
+                    }
+
+                    coupleGroup.position.x = nextX;
+                    coupleGroup.position.z = nextZ;
+                }
+
+                // Check Goal Reached
+                if (coupleGroup.position.z <= GOAL_Z + 1.8 && gatesCleared === 55) {
+                    triggerVictory();
+                }
+            }
+
+            // Walking Animation
+            if (isMoving) {
+                const swing = Math.sin(time * 16) * 0.48;
+                him.userData.leftLeg.rotation.x = swing;
+                him.userData.rightLeg.rotation.x = -swing;
+                her.userData.leftLeg.rotation.x = -swing;
+                her.userData.rightLeg.rotation.x = swing;
+                coupleGroup.position.y = Math.abs(Math.sin(time * 16)) * 0.09;
+            } else {
+                him.userData.leftLeg.rotation.x = 0;
+                him.userData.rightLeg.rotation.x = 0;
+                her.userData.leftLeg.rotation.x = 0;
+                her.userData.rightLeg.rotation.x = 0;
+                coupleGroup.position.y = 0;
+            }
+
+            // Victory Fireworks
+            if (gameState === 'VICTORY') {
+                fireworkTimer += 0.016;
+                if (fireworkTimer > 1.0) {
+                    fireworkTimer = 0;
+                    const fx = (Math.random() - 0.5) * 16;
+                    const fy = 4.5 + Math.random() * 5.5;
+                    const fz = GOAL_Z - 4 + (Math.random() - 0.5) * 7;
+                    const colors = [0xf43f5e, 0xfbbf24, 0xec4899, 0x38bdf8, 0xa855f7];
+                    spawnBurst(fx, fy, fz, colors[Math.floor(Math.random() * colors.length)], 60);
+                }
+            }
+
+            // Update Bursts
+            for (let i = bursts.length - 1; i >= 0; i--) {
+                const b = bursts[i];
+                b.life -= 0.022;
+                if (b.life <= 0) {
+                    scene.remove(b.points);
+                    b.points.geometry.dispose();
+                    b.points.material.dispose();
+                    bursts.splice(i, 1);
+                    continue;
+                }
+                const posAttr = b.points.geometry.attributes.position;
+                for (let j = 0; j < b.velocities.length; j++) {
+                    posAttr.array[j * 3] += b.velocities[j].vx;
+                    posAttr.array[j * 3 + 1] += b.velocities[j].vy;
+                    posAttr.array[j * 3 + 2] += b.velocities[j].vz;
+                    b.velocities[j].vy -= 0.005;
+                }
+                posAttr.needsUpdate = true;
+                b.points.material.opacity = b.life;
+            }
+
+            // Camera Follow
+            coupleLight.position.set(coupleGroup.position.x, 3, coupleGroup.position.z);
+            const camDist = 7.4;
+            const targetCamX = coupleGroup.position.x + Math.sin(camAngle) * camDist;
+            const targetCamZ = coupleGroup.position.z + Math.cos(camAngle) * camDist;
+            camera.position.lerp(new THREE.Vector3(targetCamX, camHeight, targetCamZ), 0.12);
+            camera.lookAt(coupleGroup.position.x, 1.6, coupleGroup.position.z - 4.5);
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = function () {
+            animate();
+        };
+    </script>
+</body>
+</html>
